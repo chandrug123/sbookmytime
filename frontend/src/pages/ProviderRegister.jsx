@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../api';
 import INDIA_DATA from '../indiaData';
 
@@ -7,14 +7,21 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const DEFAULT_TIMINGS = {};
 DAYS.forEach(d => { DEFAULT_TIMINGS[d] = { open: '09:00', close: '18:00', closed: false }; });
 
-const TOTAL_STEPS = 6;
+const STEPS = [
+  { num: 1, icon: '🏪', label: 'Shop Info' },
+  { num: 2, icon: '📍', label: 'Address' },
+  { num: 3, icon: '🚗', label: 'Services' },
+  { num: 4, icon: '🔧', label: 'Features' },
+  { num: 5, icon: '🕐', label: 'Timings' },
+  { num: 6, icon: '💰', label: 'Pricing' },
+];
 
 export default function ProviderRegister({ embedded }) {
   const [step, setStep] = useState(1);
+  const [dir, setDir] = useState('next');
   const [features, setFeatures] = useState({ car: [], bike: [] });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     shop_name: '', owner_name: '', email: '', phone: '', whatsapp: '',
@@ -74,8 +81,9 @@ export default function ProviderRegister({ embedded }) {
     return true;
   };
 
-  const next = () => { if (validateStep()) setStep(step + 1); };
-  const back = () => { setError(''); setStep(step - 1); };
+  const goTo = (n) => { if (n < step || validateStep()) { setDir(n > step ? 'next' : 'prev'); setError(''); setStep(n); } };
+  const next = () => goTo(step + 1);
+  const back = () => goTo(step - 1);
 
   const submit = async () => {
     setError('');
@@ -87,202 +95,184 @@ export default function ProviderRegister({ embedded }) {
     }
   };
 
+  // --- Success screens ---
   if (success) {
-    if (embedded) {
-      return (
-        <div className="page">
-          <div className="card" style={{ textAlign: 'center', padding: 32 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-            <h2>Provider Registered!</h2>
-            <p style={{ color: 'var(--muted)', margin: '8px 0 20px' }}>
-              <strong>{form.shop_name}</strong> has been added successfully.
-            </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+    const inner = (
+      <div className="prov-success">
+        <div className="prov-success-icon">🎉</div>
+        <h2>{embedded ? 'Provider Registered!' : 'Registration Complete!'}</h2>
+        <p><strong>{form.shop_name}</strong> has been {embedded ? 'added' : 'registered'} successfully.</p>
+        {!embedded && <p>Admin will verify your shop. You'll be notified once approved.</p>}
+        <div className="prov-success-actions">
+          {embedded ? (
+            <>
               <Link to="/providers" className="btn primary">View Providers</Link>
-              <button className="btn small" onClick={() => { setSuccess(false); setStep(1); setForm({ ...form, shop_name: '', owner_name: '', email: '', phone: '', whatsapp: '', address: '', services: [], features: [], pricing: {}, timings: { ...DEFAULT_TIMINGS } }); }}>Add Another</button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="auth-page">
-        <div className="auth-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-          <h1>Registration Complete!</h1>
-          <p className="subtitle" style={{ marginBottom: 8 }}><strong>{form.shop_name}</strong> has been registered successfully.</p>
-          <p className="subtitle" style={{ marginBottom: 20 }}>Admin will verify your shop. You'll be notified once approved.</p>
-          <Link to="/login" className="btn primary full">Back to Login</Link>
+              <button className="btn small" onClick={() => { setSuccess(false); setStep(1); setForm({ ...form, shop_name:'',owner_name:'',email:'',phone:'',whatsapp:'',address:'',services:[],features:[],pricing:{},timings:{...DEFAULT_TIMINGS} }); }}>Add Another</button>
+            </>
+          ) : (
+            <Link to="/login" className="btn primary full">Back to Login</Link>
+          )}
         </div>
       </div>
     );
+    if (embedded) return <div className="page"><div className="card" style={{ padding: 32 }}>{inner}</div></div>;
+    return <div className="auth-page"><div className="auth-card">{inner}</div></div>;
   }
 
-  const stepContent = (
-    <>
-      {!embedded && <Link to="/login" className="back-link">← Back to Login</Link>}
-      <h1>🏪 {embedded ? 'Add Service Provider' : 'Register Your Shop'}</h1>
-      <p className="subtitle">Step {step} of {TOTAL_STEPS}</p>
-      <div className="step-bar">
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(s => (
-          <div key={s} className={`step-dot ${s <= step ? 'active' : ''}`} />
-        ))}
-      </div>
+  // --- Step indicator ---
+  const stepIndicator = (
+    <div className="step-indicator">
+      {STEPS.map((s, i) => (
+        <div key={s.num} className="step-item-wrap">
+          <button
+            className={`step-item ${step === s.num ? 'current' : ''} ${step > s.num ? 'done' : ''}`}
+            onClick={() => goTo(s.num)}
+          >
+            <span className="step-icon">{step > s.num ? '✓' : s.icon}</span>
+            <span className="step-label">{s.label}</span>
+          </button>
+          {i < STEPS.length - 1 && <div className={`step-line ${step > s.num ? 'done' : ''}`} />}
+        </div>
+      ))}
+    </div>
+  );
 
+  // --- Form content per step ---
+  const formContent = (
+    <div className={`prov-slide prov-slide-${dir}`} key={step}>
       {error && <div className="alert error">{error}</div>}
 
       {step === 1 && (
         <div className="prov-step">
-          <h3>Shop & Owner Details</h3>
-          <div className="field"><label>Shop Name *</label><input type="text" value={form.shop_name} onChange={update('shop_name')} placeholder="e.g. Ravi Motors" /></div>
-          <div className="field"><label>Owner Name *</label><input type="text" value={form.owner_name} onChange={update('owner_name')} placeholder="Full name" /></div>
-          <div className="field"><label>Email *</label><input type="email" value={form.email} onChange={update('email')} placeholder="shop@email.com" /></div>
-          <div className="field"><label>Phone</label><input type="tel" value={form.phone} onChange={update('phone')} placeholder="+91 9876543210" /></div>
-          <div className="field"><label>WhatsApp Number * <span className="wa-badge">Required</span></label><input type="tel" value={form.whatsapp} onChange={update('whatsapp')} placeholder="+91 9876543210" /></div>
-          <button className="btn primary full" onClick={next}>Next →</button>
+          <div className="prov-step-header"><span>🏪</span><div><h3>Shop & Owner Details</h3><p className="prov-hint">Tell us about your business</p></div></div>
+          <div className="prov-form-grid">
+            <div className="field"><label>Shop Name *</label><input type="text" value={form.shop_name} onChange={update('shop_name')} placeholder="e.g. Ravi Motors" /></div>
+            <div className="field"><label>Owner Name *</label><input type="text" value={form.owner_name} onChange={update('owner_name')} placeholder="Full name" /></div>
+            <div className="field"><label>Email *</label><input type="email" value={form.email} onChange={update('email')} placeholder="shop@email.com" /></div>
+            <div className="field"><label>Phone</label><input type="tel" value={form.phone} onChange={update('phone')} placeholder="+91 9876543210" /></div>
+            <div className="field prov-full"><label>WhatsApp Number * <span className="wa-badge">Required</span></label><input type="tel" value={form.whatsapp} onChange={update('whatsapp')} placeholder="+91 9876543210" /></div>
+          </div>
         </div>
       )}
-
       {step === 2 && (
         <div className="prov-step">
-          <h3>Shop Address</h3>
-          <div className="field"><label>Full Address *</label><textarea value={form.address} onChange={update('address')} rows={3} placeholder="Shop no, street, area..." className="prov-textarea" /></div>
-          <div className="field"><label>State *</label><select value={form.state} onChange={e => setForm({ ...form, state: e.target.value, district: '', taluk: '' })}><option value="">Select State</option>{INDIA_DATA.states.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-          <div className="field"><label>District *</label><select value={form.district} onChange={e => setForm({ ...form, district: e.target.value, taluk: '' })} disabled={!form.state}><option value="">Select District</option>{districts.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
-          <div className="field"><label>Taluk</label><select value={form.taluk} onChange={update('taluk')} disabled={!form.district}><option value="">Select Taluk</option>{taluks.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-          <div className="field"><label>Pincode</label><input type="text" value={form.pincode} onChange={update('pincode')} placeholder="560001" maxLength={6} /></div>
-          <div className="prov-nav"><button className="btn small" onClick={back}>← Back</button><button className="btn primary" onClick={next}>Next →</button></div>
+          <div className="prov-step-header"><span>📍</span><div><h3>Shop Address</h3><p className="prov-hint">Where is your shop located?</p></div></div>
+          <div className="prov-form-grid">
+            <div className="field prov-full"><label>Full Address *</label><textarea value={form.address} onChange={update('address')} rows={3} placeholder="Shop no, street, area..." className="prov-textarea" /></div>
+            <div className="field"><label>State *</label><select value={form.state} onChange={e => setForm({...form,state:e.target.value,district:'',taluk:''})}><option value="">Select State</option>{INDIA_DATA.states.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+            <div className="field"><label>District *</label><select value={form.district} onChange={e => setForm({...form,district:e.target.value,taluk:''})} disabled={!form.state}><option value="">Select District</option>{districts.map(d=><option key={d} value={d}>{d}</option>)}</select></div>
+            <div className="field"><label>Taluk</label><select value={form.taluk} onChange={update('taluk')} disabled={!form.district}><option value="">Select Taluk</option>{taluks.map(t=><option key={t} value={t}>{t}</option>)}</select></div>
+            <div className="field"><label>Pincode</label><input type="text" value={form.pincode} onChange={update('pincode')} placeholder="560001" maxLength={6} /></div>
+          </div>
         </div>
       )}
-
       {step === 3 && (
         <div className="prov-step">
-          <h3>Services Offered</h3>
-          <p className="prov-hint">Select the types of vehicles you service</p>
+          <div className="prov-step-header"><span>🚗</span><div><h3>Services Offered</h3><p className="prov-hint">Select the types of vehicles you service</p></div></div>
           <div className="prov-svc-grid">
-            <button className={`prov-svc-btn ${form.services.includes('car') ? 'selected' : ''}`} onClick={() => toggleService('car')}>
+            <button className={`prov-svc-btn ${form.services.includes('car')?'selected':''}`} onClick={()=>toggleService('car')}>
               <span className="prov-svc-icon">🚗</span><strong>Car Service</strong><small>4-wheeler maintenance</small>
-              {form.services.includes('car') && <span className="prov-svc-check">✓</span>}
+              {form.services.includes('car')&&<span className="prov-svc-check">✓</span>}
             </button>
-            <button className={`prov-svc-btn ${form.services.includes('bike') ? 'selected' : ''}`} onClick={() => toggleService('bike')}>
+            <button className={`prov-svc-btn ${form.services.includes('bike')?'selected':''}`} onClick={()=>toggleService('bike')}>
               <span className="prov-svc-icon">🏍️</span><strong>Bike Service</strong><small>2-wheeler maintenance</small>
-              {form.services.includes('bike') && <span className="prov-svc-check">✓</span>}
+              {form.services.includes('bike')&&<span className="prov-svc-check">✓</span>}
             </button>
           </div>
-          <div className="prov-nav"><button className="btn small" onClick={back}>← Back</button><button className="btn primary" onClick={next}>Next →</button></div>
         </div>
       )}
-
       {step === 4 && (
         <div className="prov-step">
-          <h3>Features & Specializations</h3>
-          <p className="prov-hint">Select what your shop offers</p>
-          {availableFeatures.length === 0 ? (
-            <div className="info-box" style={{ marginBottom: 16 }}>Go back and select at least one service type first.</div>
+          <div className="prov-step-header"><span>🔧</span><div><h3>Features & Specializations</h3><p className="prov-hint">Select what your shop offers</p></div></div>
+          {availableFeatures.length===0 ? (
+            <div className="info-box">Go back and select at least one service type first.</div>
           ) : (
-            <div className="prov-features">
-              {availableFeatures.map(f => (
-                <button key={f} className={`prov-feat-chip ${form.features.includes(f) ? 'selected' : ''}`} onClick={() => toggleFeature(f)}>
-                  {form.features.includes(f) && <span>✓ </span>}{f}
-                </button>
-              ))}
-            </div>
+            <div className="prov-features">{availableFeatures.map(f=>(
+              <button key={f} className={`prov-feat-chip ${form.features.includes(f)?'selected':''}`} onClick={()=>toggleFeature(f)}>
+                {form.features.includes(f)&&<span>✓ </span>}{f}
+              </button>
+            ))}</div>
           )}
-          <div className="prov-nav"><button className="btn small" onClick={back}>← Back</button><button className="btn primary" onClick={next}>Next →</button></div>
         </div>
       )}
-
       {step === 5 && (
         <div className="prov-step">
-          <h3>🕐 Shop Timings</h3>
-          <p className="prov-hint">Set opening and closing hours for each day</p>
-          <div className="timing-list">
-            {DAYS.map(day => (
-              <div key={day} className={`timing-row ${form.timings[day]?.closed ? 'is-closed' : ''}`}>
-                <div className="timing-day">
-                  <strong>{day.slice(0, 3)}</strong>
-                  <button className={`timing-toggle ${form.timings[day]?.closed ? 'closed' : 'open'}`} onClick={() => toggleClosed(day)}>
-                    {form.timings[day]?.closed ? 'Closed' : 'Open'}
-                  </button>
-                </div>
-                {!form.timings[day]?.closed && (
-                  <div className="timing-inputs">
-                    <input type="time" value={form.timings[day]?.open || '09:00'} onChange={e => setTiming(day, 'open', e.target.value)} />
-                    <span>to</span>
-                    <input type="time" value={form.timings[day]?.close || '18:00'} onChange={e => setTiming(day, 'close', e.target.value)} />
-                  </div>
-                )}
+          <div className="prov-step-header"><span>🕐</span><div><h3>Shop Timings</h3><p className="prov-hint">Set your opening and closing hours</p></div></div>
+          <div className="timing-list">{DAYS.map(day=>(
+            <div key={day} className={`timing-row ${form.timings[day]?.closed?'is-closed':''}`}>
+              <div className="timing-day">
+                <strong>{day.slice(0,3)}</strong>
+                <button className={`timing-toggle ${form.timings[day]?.closed?'closed':'open'}`} onClick={()=>toggleClosed(day)}>
+                  {form.timings[day]?.closed?'Closed':'Open'}
+                </button>
               </div>
-            ))}
-          </div>
-          <div className="prov-nav"><button className="btn small" onClick={back}>← Back</button><button className="btn primary" onClick={next}>Next →</button></div>
+              {!form.timings[day]?.closed&&(
+                <div className="timing-inputs">
+                  <input type="time" value={form.timings[day]?.open||'09:00'} onChange={e=>setTiming(day,'open',e.target.value)} />
+                  <span>to</span>
+                  <input type="time" value={form.timings[day]?.close||'18:00'} onChange={e=>setTiming(day,'close',e.target.value)} />
+                </div>
+              )}
+            </div>
+          ))}</div>
         </div>
       )}
-
       {step === 6 && (
         <div className="prov-step">
-          <h3>💰 Pricing</h3>
-          <p className="prov-hint">Set prices for your selected features (in ₹)</p>
+          <div className="prov-step-header"><span>💰</span><div><h3>Pricing</h3><p className="prov-hint">Set consulting fee and price range per feature</p></div></div>
           <div className="pricing-toggle-row">
             <span>Show prices to customers</span>
-            <button className={`pricing-toggle ${form.show_prices ? 'on' : 'off'}`} onClick={() => setForm({ ...form, show_prices: !form.show_prices })}>
+            <button className={`pricing-toggle ${form.show_prices?'on':'off'}`} onClick={()=>setForm({...form,show_prices:!form.show_prices})}>
               <span className="pricing-toggle-knob" />
             </button>
           </div>
-          {form.features.length === 0 ? (
-            <div className="info-box" style={{ marginBottom: 16 }}>No features selected. Go back to add features first.</div>
+          {form.features.length===0 ? (
+            <div className="info-box">No features selected. Go back to add features first.</div>
           ) : (
-            <div className="pricing-list">
-              {form.features.map(f => {
-                const p = form.pricing[f] || {};
-                return (
-                  <div key={f} className="pricing-card">
-                    <div className="pricing-card-header">{f}</div>
-                    <div className="pricing-fields">
-                      <div className="pricing-field">
-                        <label>Consulting</label>
-                        <div className="pricing-input-wrap">
-                          <span className="pricing-currency">₹</span>
-                          <input type="number" min="0" className="pricing-input" placeholder="0" value={p.consulting || ''} onChange={e => setPrice(f, 'consulting', e.target.value)} />
-                        </div>
-                      </div>
-                      <div className="pricing-field">
-                        <label>From</label>
-                        <div className="pricing-input-wrap">
-                          <span className="pricing-currency">₹</span>
-                          <input type="number" min="0" className="pricing-input" placeholder="Min" value={p.from || ''} onChange={e => setPrice(f, 'from', e.target.value)} />
-                        </div>
-                      </div>
-                      <div className="pricing-field">
-                        <label>To</label>
-                        <div className="pricing-input-wrap">
-                          <span className="pricing-currency">₹</span>
-                          <input type="number" min="0" className="pricing-input" placeholder="Max" value={p.to || ''} onChange={e => setPrice(f, 'to', e.target.value)} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <div className="pricing-list">{form.features.map(f=>{const p=form.pricing[f]||{};return(
+              <div key={f} className="pricing-card">
+                <div className="pricing-card-header">{f}</div>
+                <div className="pricing-fields">
+                  <div className="pricing-field"><label>Consulting</label><div className="pricing-input-wrap"><span className="pricing-currency">₹</span><input type="number" min="0" className="pricing-input" placeholder="0" value={p.consulting||''} onChange={e=>setPrice(f,'consulting',e.target.value)} /></div></div>
+                  <div className="pricing-field"><label>From</label><div className="pricing-input-wrap"><span className="pricing-currency">₹</span><input type="number" min="0" className="pricing-input" placeholder="Min" value={p.from||''} onChange={e=>setPrice(f,'from',e.target.value)} /></div></div>
+                  <div className="pricing-field"><label>To</label><div className="pricing-input-wrap"><span className="pricing-currency">₹</span><input type="number" min="0" className="pricing-input" placeholder="Max" value={p.to||''} onChange={e=>setPrice(f,'to',e.target.value)} /></div></div>
+                </div>
+              </div>
+            );})}</div>
           )}
-          <div className="prov-nav"><button className="btn small" onClick={back}>← Back</button><button className="btn primary" onClick={submit}>Submit Registration</button></div>
         </div>
       )}
-    </>
+    </div>
+  );
+
+  // --- Navigation buttons ---
+  const navButtons = (
+    <div className="prov-nav">
+      {step > 1 ? <button className="btn small" onClick={back}>← Back</button> : <div />}
+      {step < 6 ? <button className="btn primary" onClick={next}>Next →</button> : <button className="btn primary" onClick={submit}>✓ Submit Registration</button>}
+    </div>
+  );
+
+  // --- Layout ---
+  const content = (
+    <div className="prov-layout">
+      {!embedded && <Link to="/login" className="back-link">← Back to Login</Link>}
+      <h1 className="prov-title">🏪 {embedded ? 'Add Service Provider' : 'Register Your Shop'}</h1>
+      {stepIndicator}
+      <div className="prov-body">
+        {formContent}
+        {navButtons}
+      </div>
+    </div>
   );
 
   if (embedded) {
-    return (
-      <div className="page">
-        <div className="card prov-card-embedded">{stepContent}</div>
-      </div>
-    );
+    return <div className="page prov-page"><div className="card prov-card-embedded">{content}</div></div>;
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card prov-card">{stepContent}</div>
+    <div className="auth-page prov-auth">
+      <div className="auth-card prov-card">{content}</div>
     </div>
   );
 }

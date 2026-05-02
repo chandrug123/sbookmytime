@@ -18,6 +18,9 @@ import MyLocation from './pages/MyLocation';
 import MemberProfile from './pages/MemberProfile';
 import Services from './pages/Services';
 import ProviderRegister from './pages/ProviderRegister';
+import SearchProviders from './pages/SearchProviders';
+import ProviderDetail from './pages/ProviderDetail';
+import PublicBooking from './pages/PublicBooking';
 import './index.css';
 
 function DefaultRedirect() {
@@ -40,11 +43,14 @@ export default function App() {
               <Route path="/login/member" element={<MemberLogin />} />
               <Route path="/register" element={<Register />} />
               <Route path="/register/provider" element={<ProviderRegister />} />
+              <Route path="/book/:id" element={<PublicBooking />} />
               {/* Member routes */}
               <Route path="/member/home" element={<ProtectedRoute roles={['member']}><MemberHome /></ProtectedRoute>} />
               <Route path="/member/services" element={<ProtectedRoute roles={['member']}><Services /></ProtectedRoute>} />
               <Route path="/member/location" element={<ProtectedRoute roles={['member']}><MyLocation /></ProtectedRoute>} />
               <Route path="/member/profile" element={<ProtectedRoute roles={['member']}><MemberProfile /></ProtectedRoute>} />
+              <Route path="/member/search/:type" element={<ProtectedRoute roles={['member']}><SearchProviders /></ProtectedRoute>} />
+              <Route path="/member/provider/:id" element={<ProtectedRoute roles={['member']}><ProviderDetail /></ProtectedRoute>} />
               {/* Staff routes */}
               <Route path="/dashboard" element={<ProtectedRoute roles={['admin', 'manager', 'user']}><Dashboard /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute roles={['admin', 'manager']}><Users /></ProtectedRoute>} />

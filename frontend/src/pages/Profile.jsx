@@ -6,7 +6,7 @@ import LocationForm from '../components/LocationForm';
 const displayName = (user) => user.name || user.email.split('@')[0];
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [editLoc, setEditLoc] = useState(false);
   const [locForm, setLocForm] = useState(user.location || { state: '', district: '', taluk: '', village: '' });
   const [error, setError] = useState('');
@@ -20,9 +20,9 @@ export default function Profile() {
     }
     try {
       await api.put('/users/me/location', locForm);
+      await refreshUser();
       setSuccess('Location updated!');
       setEditLoc(false);
-      window.location.reload();
     } catch (err) {
       setError(err.response?.data?.msg || 'Update failed');
     }

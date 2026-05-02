@@ -254,6 +254,48 @@ def list_providers():
     return jsonify(providers=[u.to_dict() for u in users])
 
 
+@providers_bp.get('/search')
+@jwt_required()
+def search_providers():
+    svc_type = request.args.get('service')
+    state = request.args.get('state', '')
+    district = request.args.get('district', '')
+    taluk = request.args.get('taluk', '')
+    if not svc_type:
+        return jsonify(msg='Service type is required'), 400
+    query = ServiceProvider.query.filter(ServiceProvider.is_verified == True)
+    if state:
+        query = query.filter(ServiceProvider.state == state)
+    if district:
+        query = query.filter(ServiceProvider.district == district)
+    if taluk:
+        query = query.filter(ServiceProvider.taluk == taluk)
+    providers = query.order_by(ServiceProvider.shop_name).all()
+    results = []
+    for p in providers:
+        if svc_type in p.services:
+            d = p.to_dict()
+            d['owner_name'] = p.user.name
+            d['owner_email'] = p.user.email
+            d['owner_phone'] = p.user.phone
+            if not p.show_prices:
+                d.pop('pricing', None)
+            results.append(d)
+    return jsonify(providers=results)
+
+
+@providers_bp.get('/<int:pid>/detail')
+def get_provider_detail(pid):
+    provider = ServiceProvider.query.get_or_404(pid)
+    d = provider.to_dict()
+    d['owner_name'] = provider.user.name
+    d['owner_email'] = provider.user.email
+    d['owner_phone'] = provider.user.phone
+    if not provider.show_prices:
+        d.pop('pricing', None)
+    return jsonify(provider=d)
+
+
 @providers_bp.put('/<int:pid>')
 @role_required('admin')
 def update_provider(pid):

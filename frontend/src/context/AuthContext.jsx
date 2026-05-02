@@ -47,10 +47,18 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      setUser(data.user);
+      return data.user;
+    } catch { return null; }
+  };
+
   const hasRole = (...roles) => user && roles.includes(user.role);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, memberLogin, register, logout, hasRole }}>
+    <AuthContext.Provider value={{ user, loading, login, memberLogin, register, logout, refreshUser, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

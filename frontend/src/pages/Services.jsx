@@ -6,22 +6,22 @@ const SERVICES = [
     id: 'car',
     label: 'Car Service',
     desc: 'Complete car care — from routine checkups to full servicing',
-    color: '#4f46e5',
-    bg: '#eef2ff',
+    color: '#0f766e',
+    bg: '#f0fdfa',
     tags: ['Oil Change', 'AC Service', 'Wash & Polish'],
     svg: (
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="svc-svg">
-        <rect x="6" y="24" width="52" height="20" rx="6" fill="#4f46e5" opacity="0.15"/>
-        <rect x="10" y="18" width="44" height="22" rx="5" fill="#4f46e5"/>
-        <rect x="14" y="22" width="14" height="10" rx="2" fill="#c7d2fe"/>
-        <rect x="36" y="22" width="14" height="10" rx="2" fill="#c7d2fe"/>
-        <circle cx="18" cy="44" r="5" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2"/>
-        <circle cx="46" cy="44" r="5" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2"/>
-        <circle cx="18" cy="44" r="2" fill="#c7d2fe"/>
-        <circle cx="46" cy="44" r="2" fill="#c7d2fe"/>
-        <rect x="4" y="36" width="56" height="6" rx="3" fill="#4f46e5" opacity="0.9"/>
+        <rect x="6" y="24" width="52" height="20" rx="6" fill="#0f766e" opacity="0.15"/>
+        <rect x="10" y="18" width="44" height="22" rx="5" fill="#0f766e"/>
+        <rect x="14" y="22" width="14" height="10" rx="2" fill="#99f6e4"/>
+        <rect x="36" y="22" width="14" height="10" rx="2" fill="#99f6e4"/>
+        <circle cx="18" cy="44" r="5" fill="#134e4a" stroke="#0f766e" strokeWidth="2"/>
+        <circle cx="46" cy="44" r="5" fill="#134e4a" stroke="#0f766e" strokeWidth="2"/>
+        <circle cx="18" cy="44" r="2" fill="#99f6e4"/>
+        <circle cx="46" cy="44" r="2" fill="#99f6e4"/>
+        <rect x="4" y="36" width="56" height="6" rx="3" fill="#0f766e" opacity="0.9"/>
         <rect x="2" y="34" width="8" height="4" rx="2" fill="#fbbf24"/>
-        <rect x="54" y="34" width="8" height="4" rx="2" fill="#ef4444"/>
+        <rect x="54" y="34" width="8" height="4" rx="2" fill="#dc2626"/>
       </svg>
     ),
   },
@@ -29,8 +29,8 @@ const SERVICES = [
     id: 'bike',
     label: 'Bike Service',
     desc: 'Keep your ride smooth — expert two-wheeler maintenance',
-    color: '#059669',
-    bg: '#ecfdf5',
+    color: '#b45309',
+    bg: '#fffbeb',
     tags: ['Engine Tune-up', 'Chain & Brake', 'Full Service'],
     svg: (
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="svc-svg">
@@ -70,7 +70,7 @@ export default function Services() {
   const handleConfirm = () => {
     localStorage.setItem('selected_service', selected);
     setConfirmed(true);
-    setTimeout(() => navigate('/member/home'), 1000);
+    setTimeout(() => navigate(`/member/search/${selected}`), 1000);
   };
 
   const sel = SERVICES.find(s => s.id === selected);

@@ -5,7 +5,7 @@ import api from '../api';
 import LocationForm from '../components/LocationForm';
 
 export default function MyLocation() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(!user.location);
   const [locForm, setLocForm] = useState(user.location || { state: '', district: '', taluk: '', village: '' });
@@ -20,6 +20,7 @@ export default function MyLocation() {
     }
     try {
       await api.put('/users/me/location', locForm);
+      await refreshUser();
       setSuccess('Location saved!');
       setEditing(false);
       setTimeout(() => navigate('/member/services'), 800);
