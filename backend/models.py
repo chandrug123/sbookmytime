@@ -171,6 +171,20 @@ class ServiceProvider(db.Model):
         }
 
 
+class PageVisit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    provider_id = db.Column(db.Integer, db.ForeignKey('service_provider.id'), nullable=False)
+    visited_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(50), default='')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'provider_id': self.provider_id,
+            'visited_at': self.visited_at.isoformat(),
+        }
+
+
 class Feature(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -39,7 +40,7 @@ export default function Providers() {
               <th>Services</th>
               <th>Features</th>
               <th>Status</th>
-              {hasRole('admin') && <th>Actions</th>}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -58,13 +59,14 @@ export default function Providers() {
                   <td>{p.services.map(s => <span key={s} className={`svc-mini ${s}`}>{s}</span>)}</td>
                   <td><span className="text-muted">{p.features.length} selected</span></td>
                   <td><span className={`status-dot ${p.is_verified ? 'active' : 'inactive'}`}>{p.is_verified ? 'Verified' : 'Pending'}</span></td>
-                  {hasRole('admin') && (
-                    <td>
-                      <button className={`btn small ${p.is_verified ? 'danger' : 'primary'}`} onClick={() => toggleVerify(u)}>
+                  <td className="table-actions">
+                    <Link to={`/providers/${p.id}/detail`} className="btn small primary">View</Link>
+                    {hasRole('admin') && (
+                      <button className={`btn small ${p.is_verified ? 'danger' : ''}`} onClick={() => toggleVerify(u)}>
                         {p.is_verified ? 'Revoke' : 'Verify'}
                       </button>
-                    </td>
-                  )}
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -99,11 +101,14 @@ export default function Providers() {
                   {p.features.map(f => <span key={f} className="prov-feat-chip selected small">{f}</span>)}
                 </div>
               )}
-              {hasRole('admin') && (
-                <button className={`btn small full ${p.is_verified ? 'danger' : 'primary'}`} onClick={() => toggleVerify(u)} style={{ marginTop: 8 }}>
-                  {p.is_verified ? 'Revoke Verification' : 'Verify Shop'}
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <Link to={`/providers/${p.id}/detail`} className="btn small primary" style={{ flex: 1 }}>View Details</Link>
+                {hasRole('admin') && (
+                  <button className={`btn small ${p.is_verified ? 'danger' : ''}`} onClick={() => toggleVerify(u)} style={{ flex: 1 }}>
+                    {p.is_verified ? 'Revoke' : 'Verify'}
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}

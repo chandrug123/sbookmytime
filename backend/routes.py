@@ -1,7 +1,9 @@
 from functools import wraps
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
-from models import db, User, Role, Location, ServiceProvider, Feature
+from models import db, User, Role, Location, ServiceProvider, Feature, PageVisit
+from sqlalchemy import func, extract
 
 auth_bp = Blueprint('auth', __name__)
 users_bp = Blueprint('users', __name__)
@@ -296,6 +298,69 @@ def get_provider_detail(pid):
     return jsonify(provider=d)
 
 
+@providers_bp.post('/<int:pid>/visit')
+def record_visit(pid):
+    ServiceProvider.query.get_or_404(pid)
+    visit = PageVisit(provider_id=pid, ip_address=request.remote_addr or '')
+    db.session.add(visit)
+    db.session.commit()
+    return jsonify(msg='Recorded'), 201
+
+
+@providers_bp.get('/<int:pid>/visits')
+@role_required('admin', 'manager', 'provider')
+def get_monthly_visits(pid):
+    year = request.args.get('year', type=int)
+    if not year:
+        year = datetime.utcnow().year
+    rows = (
+        db.session.query(
+            extract('month', PageVisit.visited_at).label('month'),
+            func.count(PageVisit.id).label('count')
+        )
+        .filter(PageVisit.provider_id == pid)
+        .filter(extract('year', PageVisit.visited_at) == year)
+        .group_by('month')
+        .order_by('month')
+        .all()
+    )
+    monthly = {int(r.month): r.count for r in rows}
+    data = [{'month': m, 'count': monthly.get(m, 0)} for m in range(1, 13)]
+    total = sum(v['count'] for v in data)
+    return jsonify(year=year, total=total, monthly=data)
+
+
+@providers_bp.get('/<int:pid>/admin-detail')
+@role_required('admin', 'manager')
+def admin_provider_detail(pid):
+    provider = ServiceProvider.query.get_or_404(pid)
+    d = provider.to_dict()
+    d['owner_name'] = provider.user.name
+    d['owner_email'] = provider.user.email
+    d['owner_phone'] = provider.user.phone
+    d['user_id'] = provider.user.id
+    d['user_role'] = provider.user.role
+    d['user_joined'] = provider.user.created_at.isoformat()
+    # Visit stats
+    year = request.args.get('year', type=int) or datetime.utcnow().year
+    rows = (
+        db.session.query(
+            extract('month', PageVisit.visited_at).label('month'),
+            func.count(PageVisit.id).label('count')
+        )
+        .filter(PageVisit.provider_id == pid)
+        .filter(extract('year', PageVisit.visited_at) == year)
+        .group_by('month')
+        .order_by('month')
+        .all()
+    )
+    monthly = {int(r.month): r.count for r in rows}
+    visits_data = [{'month': m, 'count': monthly.get(m, 0)} for m in range(1, 13)]
+    total_visits = sum(v['count'] for v in visits_data)
+    d['visits'] = {'year': year, 'total': total_visits, 'monthly': visits_data}
+    return jsonify(provider=d)
+
+
 @providers_bp.put('/<int:pid>')
 @role_required('admin')
 def update_provider(pid):
@@ -316,8 +381,23 @@ def update_provider(pid):
         provider.show_prices = bool(data['show_prices'])
     if 'is_verified' in data:
         provider.is_verified = bool(data['is_verified'])
+    # Owner details
+    user = provider.user
+    if 'owner_name' in data:
+        user.name = data['owner_name']
+    if 'owner_phone' in data:
+        user.phone = data['owner_phone']
+    if 'owner_email' in data and data['owner_email']:
+        existing = User.query.filter_by(email=data['owner_email']).first()
+        if existing and existing.id != user.id:
+            return jsonify(msg='Email already in use'), 409
+        user.email = data['owner_email']
     db.session.commit()
-    return jsonify(provider=provider.to_dict())
+    d = provider.to_dict()
+    d['owner_name'] = user.name
+    d['owner_email'] = user.email
+    d['owner_phone'] = user.phone
+    return jsonify(provider=d)
 
 
 # --- Role Management ---

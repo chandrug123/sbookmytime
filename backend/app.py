@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from models import db, User, Role, Feature, DEFAULT_ROLES, SEED_FEATURES
+from models import db, User, Role, Feature, PageVisit, DEFAULT_ROLES, SEED_FEATURES
 from routes import auth_bp, users_bp, roles_bp, providers_bp, features_bp
 from datetime import timedelta
 

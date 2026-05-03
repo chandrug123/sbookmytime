@@ -38,6 +38,7 @@ export default function PublicBooking() {
       .then(({ data }) => setProvider(data.provider))
       .catch(() => {})
       .finally(() => setLoading(false));
+    api.post(`/providers/${id}/visit`).catch(() => {});
   }, [id]);
 
   if (loading) return <div className="pub-page"><div className="search-loading"><div className="search-spinner" /><p>Loading...</p></div></div>;

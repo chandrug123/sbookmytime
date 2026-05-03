@@ -12,6 +12,7 @@ import Roles from './pages/Roles';
 import Features from './pages/Features';
 import Locations from './pages/Locations';
 import Providers from './pages/Providers';
+import AdminProviderDetail from './pages/AdminProviderDetail';
 import Profile from './pages/Profile';
 import MemberHome from './pages/MemberHome';
 import MyLocation from './pages/MyLocation';
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="/features" element={<ProtectedRoute roles={['admin']}><Features /></ProtectedRoute>} />
               <Route path="/locations" element={<ProtectedRoute roles={['admin', 'manager']}><Locations /></ProtectedRoute>} />
               <Route path="/providers" element={<ProtectedRoute roles={['admin', 'manager']}><Providers /></ProtectedRoute>} />
+              <Route path="/providers/:pid/detail" element={<ProtectedRoute roles={['admin', 'manager']}><AdminProviderDetail /></ProtectedRoute>} />
               <Route path="/providers/new" element={<ProtectedRoute roles={['admin']}><ProviderRegister embedded /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute roles={['admin', 'manager', 'user']}><Profile /></ProtectedRoute>} />
               <Route path="*" element={<DefaultRedirect />} />

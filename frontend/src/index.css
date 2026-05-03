@@ -1014,3 +1014,99 @@ body {
   .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .page { padding: 40px 48px; }
 }
+
+/* ========== ADMIN PROVIDER DETAIL ========== */
+.apd-page { max-width: 900px; }
+.apd-stats { margin-bottom: 16px; }
+
+.apd-chart-card { padding: 20px; }
+.apd-chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.apd-chart-header h3 { margin: 0; font-size: 16px; }
+.apd-year-nav { display: flex; align-items: center; gap: 10px; }
+.apd-year { font-size: 16px; font-weight: 700; min-width: 50px; text-align: center; }
+
+.apd-chart {
+  display: flex; align-items: flex-end; gap: 6px;
+  height: 180px; padding-top: 10px;
+}
+.apd-bar-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 4px; height: 100%;
+}
+.apd-bar-val {
+  font-size: 11px; font-weight: 700; color: var(--primary);
+  min-height: 16px;
+}
+.apd-bar-track {
+  flex: 1; width: 100%; max-width: 40px;
+  background: var(--bg); border-radius: 6px 6px 0 0;
+  display: flex; align-items: flex-end; overflow: hidden;
+}
+.apd-bar-fill {
+  width: 100%; border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
+  transition: height 0.4s ease-out;
+  min-height: 2px;
+}
+.apd-bar-label {
+  font-size: 11px; color: var(--muted); font-weight: 600;
+}
+
+.apd-grid {
+  display: grid; grid-template-columns: 1fr; gap: 12px;
+  margin-bottom: 12px;
+}
+.apd-svc-list { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 8px; }
+.apd-feat-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.apd-pricing { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+.apd-pricing strong { display: block; font-size: 13px; margin-bottom: 8px; color: var(--muted); }
+.apd-price-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.apd-price-row:last-child { border-bottom: none; }
+
+@media (min-width: 768px) {
+  .apd-grid { grid-template-columns: 1fr 1fr; }
+  .apd-chart { height: 220px; }
+  .apd-bar-val { font-size: 12px; }
+  .apd-bar-label { font-size: 12px; }
+}
+
+/* ========== ADMIN PROVIDER DETAIL - EDIT MODE ========== */
+.apd-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.apd-card-header h3 { margin: 0; }
+
+.apd-actions-bar {
+  display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+}
+
+.apd-edit-form { animation: fadeIn 0.2s ease-out; }
+.apd-edit-form .field { margin-bottom: 14px; }
+.apd-edit-form .field input,
+.apd-edit-form .field select {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 15px; outline: none; background: var(--bg);
+}
+.apd-edit-form .field input:focus,
+.apd-edit-form .field select:focus { border-color: var(--primary); }
+.apd-edit-form .field label {
+  display: block; font-size: 13px; font-weight: 600;
+  margin-bottom: 6px; color: var(--muted);
+}
+
+.apd-edit-actions {
+  display: flex; gap: 10px; margin-top: 16px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+
+.apd-section-label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--muted); margin-bottom: 10px;
+}
